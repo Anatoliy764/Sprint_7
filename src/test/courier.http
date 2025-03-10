@@ -1,0 +1,21 @@
+### create
+POST {{baseUrl}}/api/v1/courier
+Content-Type: application/json
+
+{
+  "login": "ninja",
+  "password": "12345",
+  "firstName": "saske8"
+}
+
+### login
+POST {{baseUrl}}/api/v1/courier/login
+Content-Type: application/json
+
+{
+  "login": "tyler.langworth",
+  "password": "cf8brv8x"
+}
+
+### delete
+DELETE {{baseUrl}}//api/v1/courier/480580
