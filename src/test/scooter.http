@@ -1,0 +1,53 @@
+### courier create
+POST {{baseUrl}}/api/v1/courier
+Content-Type: application/json
+
+{
+  "login": "ninja",
+  "password": "12345",
+  "firstName": "saske8"
+}
+
+### courier login
+POST {{baseUrl}}/api/v1/courier/login
+Content-Type: application/json
+
+{
+  "login": "tyler.langworth",
+  "password": "cf8brv8x"
+}
+
+### courier delete
+DELETE {{baseUrl}}/api/v1/courier/480580
+
+### order create
+POST {{baseUrl}}/api/v1/orders
+Content-Type: application/json
+
+{
+  "firstName": "Дмитрий",
+  "lastName": "Яковлева",
+  "address": "Россия, Уфа, Комарова площадь, 053 кв. 083",
+  "metroStation": 62,
+  "phone": "1382312953",
+  "rentTime": 1,
+  "deliveryDate": "13.03.2025",
+  "comment": "Where there\u0027s life there\u0027s hope.",
+  "color": [
+    "BLACK"
+  ]
+}
+
+### order cancel 893758, 169198, 799291, 141141, 926859
+PUT {{baseUrl}}/api/v1/orders/cancel
+Content-Type: application/json
+
+{
+  "track": 926859
+}
+
+### metro statin find all
+GET {{baseUrl}}/api/v1/stations/search
+
+
+
