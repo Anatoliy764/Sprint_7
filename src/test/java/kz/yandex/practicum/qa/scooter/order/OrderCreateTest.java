@@ -6,9 +6,11 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -26,7 +28,7 @@ import static org.hamcrest.Matchers.notNullValue;
 * 3. можно совсем не указывать цвет;
 * 4. тело ответа содержит track.
 * */
-@RunWith(OrderedRunner.class)
+@RunWith(Parameterized.class)
 public class OrderCreateTest {
 
     private static final String ORDER_PATH = "/api/v1/orders";
@@ -42,6 +44,25 @@ public class OrderCreateTest {
             .setRentTime(FAKER.number().numberBetween(1, 7))
             .setDeliveryDate(LocalDate.now().plusDays(FAKER.number().numberBetween(1, 7)))
             .setComment(FAKER.hobbit().quote());
+
+    @Parameterized.Parameters
+    public static Collection<Object[]> getTestParameters() {
+        return Arrays.asList(new Object[][]{
+                {null, true}, // No color
+                {Arrays.asList(Color.BLACK), true},
+                {Arrays.asList(Color.BLACK, Color.GREY), true},
+                {Arrays.asList(Color.GREY), true},
+                {Arrays.asList(Color.GREEN), false} // Не валидный параметр, ожидается ошибка
+        });
+    }
+
+    private final List<Color> colors;
+    private final boolean isSuccessExpected;
+
+    public OrderCreateTest(List<Color> colors, boolean isSuccessExpected) {
+        this.colors = colors;
+        this.isSuccessExpected = isSuccessExpected;
+    }
 
     @BeforeClass
     public static void setUpBeforeClass() {
@@ -61,78 +82,24 @@ public class OrderCreateTest {
     }
 
     @Test
-    @kz.yandex.practicum.qa.scooter.Order(1)
-    public void testCreateOrderWithoutColorShouldReturnTrack() {
+    public void testCreateOrder() {
+        if (colors != null) {
+            ORDER.setColor(colors);
+        }
 
         String orderJson = toJson(ORDER);
-
         System.out.println(orderJson);
+
+        int expectedStatusCode = isSuccessExpected ? 201 : 400;
 
         long trackNumber = given().header("Content-type", "application/json").body(orderJson)
                 .when().post(ORDER_PATH)
-                .then().assertThat().statusCode(201).body("track", notNullValue())
+                .then().assertThat().statusCode(expectedStatusCode)
+                .body("track", isSuccessExpected ? notNullValue() : null)
                 .extract().response().getBody().jsonPath().getLong("track");
 
-        CREATED_ORDERS_IDS.add(trackNumber);
-    }
-
-    @Test
-    @kz.yandex.practicum.qa.scooter.Order(2)
-    public void testCreateOrderWithBlackColorShouldReturnTrack() {
-        String orderJson = toJson(ORDER.addColor(Color.BLACK));
-
-        System.out.println(orderJson);
-
-        long trackNumber = given().header("Content-type", "application/json").body(orderJson)
-                .when().post(ORDER_PATH)
-                .then().assertThat().statusCode(201).body("track", notNullValue())
-                .extract().response().getBody().jsonPath().getLong("track");
-
-        CREATED_ORDERS_IDS.add(trackNumber);
-    }
-
-    @Test
-    @kz.yandex.practicum.qa.scooter.Order(3)
-    public void testCreateOrderWithBlackAndGreyColorShouldReturnTrack() {
-        String orderJson = toJson(ORDER.addColor(Color.GREY));
-
-        System.out.println(orderJson);
-
-        long trackNumber = given().header("Content-type", "application/json").body(orderJson)
-                .when().post(ORDER_PATH)
-                .then().assertThat().statusCode(201).body("track", notNullValue())
-                .extract().response().getBody().jsonPath().getLong("track");
-
-        CREATED_ORDERS_IDS.add(trackNumber);
-    }
-
-    @Test
-    @kz.yandex.practicum.qa.scooter.Order(4)
-    public void testCreateOrderWithGreyColorShouldReturnTrack() {
-        String orderJson = toJson(ORDER.removeColor(Color.BLACK));
-
-        System.out.println(orderJson);
-
-        long trackNumber = given().header("Content-type", "application/json").body(orderJson)
-                .when().post(ORDER_PATH)
-                .then().assertThat().statusCode(201).body("track", notNullValue())
-                .extract().response().getBody().jsonPath().getLong("track");
-
-        CREATED_ORDERS_IDS.add(trackNumber);
-    }
-
-    @Test
-    @kz.yandex.practicum.qa.scooter.Order(5)
-    public void testCreateOrderWithGreenColorShouldFail() {
-        String orderJson = toJson(ORDER.setColor(Arrays.asList(Color.GREEN)));
-
-        System.out.println(orderJson);
-
-        long trackNumber = given().header("Content-type", "application/json").body(orderJson)
-                .when().post(ORDER_PATH)
-                .then().assertThat().statusCode(201).body("track", notNullValue())
-                .extract().response().getBody().jsonPath().getLong("track");
-
-        CREATED_ORDERS_IDS.add(trackNumber);
+        if (isSuccessExpected) {
+            CREATED_ORDERS_IDS.add(trackNumber);
+        }
     }
 }
