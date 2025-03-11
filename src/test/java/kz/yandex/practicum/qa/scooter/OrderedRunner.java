@@ -18,20 +18,66 @@ public class OrderedRunner extends BlockJUnit4ClassRunner {
     protected List<FrameworkMethod> computeTestMethods() {
         List<FrameworkMethod> list = super.computeTestMethods();
         List<FrameworkMethod> copy = new ArrayList<>(list);
-        Collections.sort(copy, (f1, f2) -> {
-            Order o1 = f1.getAnnotation(Order.class);
-            Order o2 = f2.getAnnotation(Order.class);
 
+        // Sort the test methods
+        copy.sort((f1, f2) -> {
+            // Get the annotations
+            Order o1 = getOrderAnnotation(f1);
+            Order o2 = getOrderAnnotation(f2);
+
+            // Check if methods are annotated with @First or @Last
+            boolean isFirst1 = f1.getAnnotation(First.class) != null;
+            boolean isFirst2 = f2.getAnnotation(First.class) != null;
+            boolean isLast1 = f1.getAnnotation(Last.class) != null;
+            boolean isLast2 = f2.getAnnotation(Last.class) != null;
+
+            // Handle @First
+            if (isFirst1 && !isFirst2) {
+                return -1; // f1 is @First, so it comes before f2
+            } else if (!isFirst1 && isFirst2) {
+                return 1; // f2 is @First, so it comes before f1
+            }
+
+            // Handle @Last
+            if (isLast1 && !isLast2) {
+                return 1; // f1 is @Last, so it comes after f2
+            } else if (!isLast1 && isLast2) {
+                return -1; // f2 is @Last, so it comes after f1
+            }
+
+            // If neither are @First/@Last, fall back to @Order
             if (o1 == null && o2 == null) {
                 return 0;
-            } else if(o1 != null && o2 == null) {
+            } else if (o1 != null && o2 == null) {
                 return -1;
-            } else if(o1 == null && o2 != null) {
+            } else if (o1 == null && o2 != null) {
                 return 1;
             } else {
-                return Comparator.comparingInt(Order::value).compare(o1, o2);
+                return Integer.compare(o1.value(), o2.value());
             }
         });
+
         return copy;
     }
+
+    /**
+     * Helper method to retrieve the `Order` annotation, even if the method
+     * is annotated with `@First` or `@Last`, which themselves use `@Order`.
+     */
+    private Order getOrderAnnotation(FrameworkMethod method) {
+        Order order = method.getAnnotation(Order.class);
+        if (order == null) {
+            // Check for meta-annotations like @First and @Last
+            First first = method.getAnnotation(First.class);
+            if (first != null) {
+                return First.class.getAnnotation(Order.class);
+            }
+            Last last = method.getAnnotation(Last.class);
+            if (last != null) {
+                return Last.class.getAnnotation(Order.class);
+            }
+        }
+        return order;
+    }
+
 }
