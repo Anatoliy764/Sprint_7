@@ -16,7 +16,7 @@ public class MetroStationUtil {
     public static List<MetroStation> findAll() {
         Response response = RestAssured.given()
                 .when()
-                .get("https://qa-scooter.praktikum-services.ru/api/v1/stations/search")
+                .get(ScooterRentUrlUtil.BASE_URL + "/stations/search")
                 .thenReturn();
 
         String json = response.getBody().prettyPrint();

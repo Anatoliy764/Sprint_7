@@ -2,6 +2,7 @@ package kz.yandex.practicum.qa.scooter.courier;
 
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
+import kz.yandex.practicum.qa.scooter.util.ScooterRentUrlUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -10,10 +11,13 @@ import static io.restassured.RestAssured.baseURI;
 import static io.restassured.RestAssured.given;
 import static kz.yandex.practicum.qa.scooter.FakerInstance.FAKER;
 import static kz.yandex.practicum.qa.scooter.util.JsonUtil.toJson;
+import static kz.yandex.practicum.qa.scooter.util.ScooterRentUrlUtil.*;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
 /*
+ * 1. Логин курьера
+ * Проверь:
  * 1. курьер может авторизоваться;
  * 2. для авторизации нужно передать все обязательные поля;
  * 3. система вернёт ошибку, если неправильно указать логин или пароль;
@@ -23,16 +27,13 @@ import static org.hamcrest.Matchers.notNullValue;
  * */
 public class CourierLoginTest {
 
-    private static final String COURIER_PATH = "/api/v1/courier";
-    private static final String COURIER_LOGIN_PATH = COURIER_PATH + "/login";
-
     private static final Credentials CREDENTIALS = new Courier()
             .setLogin(FAKER.name().username())
             .setPassword(FAKER.internet().password());
 
     @BeforeClass
     public static void setUpBeforeClass() {
-        baseURI = "https://qa-scooter.praktikum-services.ru";
+        baseURI = BASE_URL;
 
         String courierJson = toJson(CREDENTIALS);
 

@@ -1,7 +1,10 @@
 package kz.yandex.practicum.qa.scooter.order;
 
+import io.qameta.allure.Description;
+import io.qameta.allure.junit4.DisplayName;
 import kz.yandex.practicum.qa.scooter.OrderedRunner;
 import kz.yandex.practicum.qa.scooter.util.MetroStationUtil;
+import kz.yandex.practicum.qa.scooter.util.ScooterRentUrlUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -18,6 +21,7 @@ import static io.restassured.RestAssured.baseURI;
 import static io.restassured.RestAssured.given;
 import static kz.yandex.practicum.qa.scooter.FakerInstance.FAKER;
 import static kz.yandex.practicum.qa.scooter.util.JsonUtil.toJson;
+import static kz.yandex.practicum.qa.scooter.util.ScooterRentUrlUtil.*;
 import static org.hamcrest.Matchers.notNullValue;
 
 /*
@@ -31,8 +35,6 @@ import static org.hamcrest.Matchers.notNullValue;
 @RunWith(Parameterized.class)
 public class OrderCreateTest {
 
-    private static final String ORDER_PATH = "/api/v1/orders";
-    private static final String ORDER_CANCEL_PATH = ORDER_PATH + "/cancel";
     private static final List<Long> CREATED_ORDERS_IDS = new LinkedList<>();
 
     private static final Order ORDER = new Order()
@@ -66,7 +68,7 @@ public class OrderCreateTest {
 
     @BeforeClass
     public static void setUpBeforeClass() {
-        baseURI = "https://qa-scooter.praktikum-services.ru";
+        baseURI = ScooterRentUrlUtil.BASE_URL;
     }
 
     @AfterClass
@@ -74,14 +76,15 @@ public class OrderCreateTest {
         System.out.println(CREATED_ORDERS_IDS);
         for (Long orderId : CREATED_ORDERS_IDS) {
             given()
-                    .header("Content-type", "application/json")
-                    .body("{\"track\": " + orderId + "}")
                     .when()
-                    .put(ORDER_CANCEL_PATH);
+                    .put(ORDER_CANCEL_PATH + orderId)
+                    .then().assertThat().statusCode(200);
         }
     }
 
     @Test
+    @DisplayName("Тест создания заказа")
+    @Description("Параметризированный тест создания заказа с различными комбинациями значений в поле color")
     public void testCreateOrder() {
         if (colors != null) {
             ORDER.setColor(colors);

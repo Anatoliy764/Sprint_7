@@ -31,7 +31,7 @@ Content-Type: application/json
   "metroStation": 62,
   "phone": "1382312953",
   "rentTime": 1,
-  "deliveryDate": "13.03.2025",
+  "deliveryDate": "2025-03-13",
   "comment": "Where there\u0027s life there\u0027s hope.",
   "color": [
     "BLACK"
@@ -43,8 +43,17 @@ PUT {{baseUrl}}/api/v1/orders/cancel
 Content-Type: application/json
 
 {
-  "track": 926859
+  "track": 188093
 }
+
+### order cancel 893758, 169198, 799291, 141141, 926859
+PUT {{baseUrl}}/api/v1/orders/cancel?track=188093
+
+### order list
+GET {{baseUrl}}/api/v1/orders
+
+### order delete
+DELETE {{baseUrl}}/api/v1/orders/188093
 
 ### metro statin find all
 GET {{baseUrl}}/api/v1/stations/search

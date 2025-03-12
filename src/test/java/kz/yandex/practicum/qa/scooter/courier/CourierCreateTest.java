@@ -4,6 +4,7 @@ import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
 import kz.yandex.practicum.qa.scooter.First;
 import kz.yandex.practicum.qa.scooter.OrderedRunner;
+import kz.yandex.practicum.qa.scooter.util.ScooterRentUrlUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -16,9 +17,21 @@ import static io.restassured.RestAssured.baseURI;
 import static io.restassured.RestAssured.given;
 import static kz.yandex.practicum.qa.scooter.FakerInstance.FAKER;
 import static kz.yandex.practicum.qa.scooter.util.JsonUtil.toJson;
+import static kz.yandex.practicum.qa.scooter.util.ScooterRentUrlUtil.*;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
+/*
+* 1. Создание курьера
+* Проверь:
+* 1. курьера можно создать;
+* 2. нельзя создать двух одинаковых курьеров;
+* 3. чтобы создать курьера, нужно передать в ручку все обязательные поля;
+* 4. запрос возвращает правильный код ответа;
+* 5. успешный запрос возвращает ok: true;
+* 6. если одного из полей нет, запрос возвращает ошибку;
+* 7. если создать пользователя с логином, который уже есть, возвращается ошибка.
+* */
 @RunWith(OrderedRunner.class)
 public class CourierCreateTest {
 
@@ -33,10 +46,6 @@ public class CourierCreateTest {
 
     private static final List<Courier> COURIERS = new LinkedList<>();
 
-    private static final String COURIER_PATH = "/api/v1/courier";
-
-    private static final String COURIER_LOGIN_PATH = COURIER_PATH + "/login";
-
     static {
         COURIERS.add(COURIER);
         COURIERS.add(COURIER_WITH_FIRST_NAME);
@@ -44,7 +53,7 @@ public class CourierCreateTest {
 
     @BeforeClass
     public static void setUpBeforeClass() {
-        baseURI = "https://qa-scooter.praktikum-services.ru";
+        baseURI = ScooterRentUrlUtil.BASE_URL;
     }
 
     @AfterClass
@@ -76,6 +85,10 @@ public class CourierCreateTest {
         }
     }
 
+    // * 1. курьера можно создать;
+    // * 3. чтобы создать курьера, нужно передать в ручку все обязательные поля;
+    // * 4. запрос возвращает правильный код ответа;
+    // * 5. успешный запрос возвращает ok: true;
     @Test
     @First
     @DisplayName("Тест создания курьера должен вернуть ok")
@@ -96,6 +109,7 @@ public class CourierCreateTest {
                 .body("ok", equalTo(true));
     }
 
+    // * 2. нельзя создать двух одинаковых курьеров;
     @Test
     @DisplayName("Тест создания курьера идентичного ранее созданному")
     @Description("Ответ должен быть не успешным. Ожидаемый статус = 409, тело ответа = {\"ok\":true}")
@@ -117,7 +131,7 @@ public class CourierCreateTest {
                 .body("message", equalTo("Этот логин уже используется. Попробуйте другой."));
     }
 
-    // если одного из полей нет, запрос возвращает ошибку;
+    // * 6. если одного из полей нет, запрос возвращает ошибку;
     @Test
     @DisplayName("Тест создания курьера без пароля")
     @Description("Ответ должен быть не успешным. Ожидаемый статус = 400, тело ответа = {\"code\":400,\"message\":\"Недостаточно данных для создания учетной записи.\"}")
@@ -141,7 +155,7 @@ public class CourierCreateTest {
                 .body("message", equalTo("Недостаточно данных для создания учетной записи"));
     }
 
-    // если одного из полей нет, запрос возвращает ошибку;
+    // * 6. если одного из полей нет, запрос возвращает ошибку;
     @Test
     @DisplayName("Тест создания курьера без логина")
     @Description("Ответ должен быть не успешным. Ожидаемый статус = 400, тело ответа = {\"code\":400,\"message\":\"Недостаточно данных для создания учетной записи.\"}")
@@ -165,6 +179,7 @@ public class CourierCreateTest {
                 .body("message", equalTo("Недостаточно данных для создания учетной записи"));
     }
 
+    // * 6. если одного из полей нет, запрос возвращает ошибку;
     // чтобы создать курьера, нужно передать в ручку все обязательные поля;
     // система создает курьера только если тело запроса содержит login и password,
     // однако в документации не сказано какие именно поля являются обязательными.
