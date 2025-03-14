@@ -101,7 +101,7 @@ public class CourierCreateTest {
         CourierRestApiClient.create(courierFullyInitialized)
                 .then()
                 .assertThat()
-                .statusCode(201)
+                .statusCode(HttpStatus.SC_CREATED)
                 .and()
                 .body("ok", equalTo(true));
 
@@ -117,9 +117,9 @@ public class CourierCreateTest {
         CourierRestApiClient.create(courierDuplicated)
                 .then()
                 .assertThat()
-                .statusCode(409)
+                .statusCode(HttpStatus.SC_CONFLICT)
                 .and()
-                .body("code", equalTo(409))
+                .body("code", equalTo(HttpStatus.SC_CONFLICT))
                 .and()
                 .body("message", equalTo(CourierRestApiClient.MESSAGE_USERNAME_ALREADY_EXISTS));
     }
@@ -133,9 +133,9 @@ public class CourierCreateTest {
         CourierRestApiClient.create(courierWithoutPassword)
                 .then()
                 .assertThat()
-                .statusCode(400)
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .and()
-                .body("code", equalTo(400))
+                .body("code", equalTo(HttpStatus.SC_BAD_REQUEST))
                 .and()
                 .body("message", equalTo(CourierRestApiClient.MESSAGE_INSUFFICIENT_DATA));
     }
@@ -149,9 +149,9 @@ public class CourierCreateTest {
         CourierRestApiClient.create(courierWithoutUsername)
                 .then()
                 .assertThat()
-                .statusCode(400)
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .and()
-                .body("code", equalTo(400))
+                .body("code", equalTo(HttpStatus.SC_BAD_REQUEST))
                 .and()
                 .body("message", equalTo(CourierRestApiClient.MESSAGE_INSUFFICIENT_DATA));
     }
@@ -168,9 +168,9 @@ public class CourierCreateTest {
         CourierRestApiClient.create(courierWithoutUsernameAndPassword)
                 .then()
                 .assertThat()
-                .statusCode(400)
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .and()
-                .body("code", equalTo(400))
+                .body("code", equalTo(HttpStatus.SC_BAD_REQUEST))
                 .and()
                 .body("message", equalTo(CourierRestApiClient.MESSAGE_INSUFFICIENT_DATA));
     }
@@ -184,7 +184,7 @@ public class CourierCreateTest {
         CourierRestApiClient.create(courierWithUsernameAndPassword)
                 .then()
                 .assertThat()
-                .statusCode(201)
+                .statusCode(HttpStatus.SC_CREATED)
                 .and()
                 .body("ok", equalTo(true));
     }
@@ -198,9 +198,9 @@ public class CourierCreateTest {
         CourierRestApiClient.create(courierWithExistentUsername)
                 .then()
                 .assertThat()
-                .statusCode(409)
+                .statusCode(HttpStatus.SC_CONFLICT)
                 .and()
-                .body("code", equalTo(409))
+                .body("code", equalTo(HttpStatus.SC_CONFLICT))
                 .and()
                 .body("message", equalTo(CourierRestApiClient.MESSAGE_USERNAME_ALREADY_EXISTS));
     }
