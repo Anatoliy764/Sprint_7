@@ -4,6 +4,7 @@ import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
 import kz.yandex.practicum.qa.scooter.courier.dto.Courier;
 import kz.yandex.practicum.qa.scooter.courier.dto.Credentials;
+import org.apache.http.HttpStatus;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -47,6 +48,11 @@ public class CourierLoginTest {
                 .body("ok", equalTo(true));
     }
 
+    @AfterClass
+    public static void tearDownAfterClass() {
+        given().when().delete(COURIER_PATH + "/" + ((Courier) CREDENTIALS).getId());
+    }
+
     // 1. курьер может авторизоваться;
     // 6. успешный запрос возвращает id.
 
@@ -62,7 +68,7 @@ public class CourierLoginTest {
                 .post(COURIER_LOGIN_PATH)
                 .then()
                 .assertThat()
-                .statusCode(200)
+                .statusCode(HttpStatus.SC_OK)
                 .and()
                 .body("id", notNullValue())
                 .extract().response().jsonPath().getLong("id");
@@ -85,7 +91,7 @@ public class CourierLoginTest {
                 .post(COURIER_LOGIN_PATH)
                 .then()
                 .assertThat()
-                .statusCode(400)
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .and()
                 .body("message", equalTo("Недостаточно данных для входа"));
     }
@@ -102,7 +108,7 @@ public class CourierLoginTest {
                 .post(COURIER_LOGIN_PATH)
                 .then()
                 .assertThat()
-                .statusCode(400)
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .and()
                 .body("message", equalTo("Недостаточно данных для входа"));
     }
@@ -119,7 +125,7 @@ public class CourierLoginTest {
                 .post(COURIER_LOGIN_PATH)
                 .then()
                 .assertThat()
-                .statusCode(400)
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .and()
                 .body("message", equalTo("Недостаточно данных для входа"));
     }
@@ -139,7 +145,7 @@ public class CourierLoginTest {
                 .post(COURIER_LOGIN_PATH)
                 .then()
                 .assertThat()
-                .statusCode(404)
+                .statusCode(HttpStatus.SC_NOT_FOUND)
                 .and()
                 .body("message", equalTo("Учетная запись не найдена"));
     }
@@ -156,7 +162,7 @@ public class CourierLoginTest {
                 .post(COURIER_LOGIN_PATH)
                 .then()
                 .assertThat()
-                .statusCode(404)
+                .statusCode(HttpStatus.SC_NOT_FOUND)
                 .and()
                 .body("message", equalTo("Учетная запись не найдена"));
     }
@@ -175,13 +181,8 @@ public class CourierLoginTest {
                 .post(COURIER_LOGIN_PATH)
                 .then()
                 .assertThat()
-                .statusCode(404)
+                .statusCode(HttpStatus.SC_NOT_FOUND)
                 .and()
                 .body("message", equalTo("Учетная запись не найдена"));
-    }
-
-    @AfterClass
-    public static void tearDownAfterClass() {
-        given().when().delete(COURIER_PATH + "/" + ((Courier) CREDENTIALS).getId());
     }
 }

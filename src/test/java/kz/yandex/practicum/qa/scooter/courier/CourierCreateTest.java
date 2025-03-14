@@ -30,7 +30,6 @@ import static org.hamcrest.Matchers.equalTo;
 * 6. если одного из полей нет, запрос возвращает ошибку;
 * 7. если создать пользователя с логином, который уже есть, возвращается ошибка.
 * */
-@RunWith(OrderedRunner.class)
 public class CourierCreateTest {
 
     private static final List<Courier> COURIERS = new LinkedList<>();
@@ -78,11 +77,17 @@ public class CourierCreateTest {
 
         for (Courier courier : COURIERS) {
             // Аутентифицируем курьера для получения идентификатора необходимого для удаления.
+            // API не удачно сделано, т.к. приходится в тесте создания курьеров неявно тестировать аутентификацию,
+            // по хорошему при создании курьера нужно возвращать идентификатор созданного клиента.
             Response response = CourierRestApiClient.authenticate(courier);
 
             if(response.getStatusCode() == HttpStatus.SC_OK) {
                 long courierId = response.then().extract().jsonPath().getLong("id");
                 // удаляем курьера если он был создан и успешно аутентифицирован
+                // неявно тестируется удаление в тесте, который по хорошему должен только проверять создание.
+                // было бы лучше сделать тесты зависимыми, либо же сделать их последовательными с общим контекстом,
+                // тогда после создания, можно проверить авторизацию и взять ранее созданных курьеров из контекста,
+                // затем точно так же удалить курьеров.
                 CourierRestApiClient.delete(courierId);
             }
         }
@@ -93,7 +98,6 @@ public class CourierCreateTest {
     // * 4. запрос возвращает правильный код ответа;
     // * 5. успешный запрос возвращает ok: true;
     @Test
-    @First
     @DisplayName("Тест создания курьера должен вернуть ok")
     @Description("Ответ должен быть успешным. Ожидаемый статус = 201, тело ответа = {\"ok\":true}")
     public void testCreateCourierShouldReturnOk() {
