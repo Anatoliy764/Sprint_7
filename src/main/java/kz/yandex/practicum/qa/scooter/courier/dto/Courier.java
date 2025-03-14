@@ -1,4 +1,4 @@
-package kz.yandex.practicum.qa.scooter.courier;
+package kz.yandex.practicum.qa.scooter.courier.dto;
 
 import lombok.AccessLevel;
 import lombok.Data;
@@ -17,6 +17,10 @@ public class Courier extends Credentials implements Cloneable {
 
     Long id;
     String firstName;
+
+    public Courier(String login, String password) {
+        super(login, password);
+    }
 
     @Override
     public Courier clone() {

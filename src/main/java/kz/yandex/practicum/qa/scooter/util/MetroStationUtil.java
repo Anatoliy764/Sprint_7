@@ -1,7 +1,6 @@
 package kz.yandex.practicum.qa.scooter.util;
 
 import io.restassured.RestAssured;
-import io.restassured.response.Response;
 import kz.yandex.practicum.qa.scooter.order.MetroStation;
 import lombok.experimental.UtilityClass;
 
@@ -14,14 +13,12 @@ public class MetroStationUtil {
     public static final List<MetroStation> STATIONS = findAll();
 
     public static List<MetroStation> findAll() {
-        Response response = RestAssured.given()
+        MetroStation[] metroStations = RestAssured.given()
                 .when()
                 .get(ScooterRentUrlUtil.BASE_URL + "/stations/search")
-                .thenReturn();
+                .then().extract().as(MetroStation[].class);
 
-        String json = response.getBody().prettyPrint();
-
-        return Arrays.asList(JsonUtil.fromJson(json, MetroStation[].class));
+        return Arrays.asList(metroStations);
     }
 
     public static MetroStation random() {

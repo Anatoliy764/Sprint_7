@@ -2,7 +2,6 @@ package kz.yandex.practicum.qa.scooter.order;
 
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
-import kz.yandex.practicum.qa.scooter.OrderedRunner;
 import kz.yandex.practicum.qa.scooter.util.MetroStationUtil;
 import kz.yandex.practicum.qa.scooter.util.ScooterRentUrlUtil;
 import org.junit.AfterClass;
@@ -20,7 +19,6 @@ import java.util.List;
 import static io.restassured.RestAssured.baseURI;
 import static io.restassured.RestAssured.given;
 import static kz.yandex.practicum.qa.scooter.FakerInstance.FAKER;
-import static kz.yandex.practicum.qa.scooter.util.JsonUtil.toJson;
 import static kz.yandex.practicum.qa.scooter.util.ScooterRentUrlUtil.*;
 import static org.hamcrest.Matchers.notNullValue;
 
@@ -73,7 +71,6 @@ public class OrderCreateTest {
 
     @AfterClass
     public static void tearDownAfterClass() {
-        System.out.println(CREATED_ORDERS_IDS);
         for (Long orderId : CREATED_ORDERS_IDS) {
             given()
                     .when()
@@ -90,12 +87,9 @@ public class OrderCreateTest {
             ORDER.setColor(colors);
         }
 
-        String orderJson = toJson(ORDER);
-        System.out.println(orderJson);
-
         int expectedStatusCode = isSuccessExpected ? 201 : 400;
 
-        long trackNumber = given().header("Content-type", "application/json").body(orderJson)
+        long trackNumber = given().header("Content-type", "application/json").body(ORDER)
                 .when().post(ORDER_PATH)
                 .then().assertThat().statusCode(expectedStatusCode)
                 .body("track", isSuccessExpected ? notNullValue() : null)

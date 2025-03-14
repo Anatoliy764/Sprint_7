@@ -8,7 +8,6 @@ import lombok.experimental.Accessors;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,6 +24,7 @@ public class Order {
     Integer metroStation;
     String phone;
     Integer rentTime;
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     LocalDate deliveryDate;
     String comment;

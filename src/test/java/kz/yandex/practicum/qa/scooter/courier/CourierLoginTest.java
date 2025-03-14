@@ -2,7 +2,8 @@ package kz.yandex.practicum.qa.scooter.courier;
 
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
-import kz.yandex.practicum.qa.scooter.util.ScooterRentUrlUtil;
+import kz.yandex.practicum.qa.scooter.courier.dto.Courier;
+import kz.yandex.practicum.qa.scooter.courier.dto.Credentials;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -10,7 +11,6 @@ import org.junit.Test;
 import static io.restassured.RestAssured.baseURI;
 import static io.restassured.RestAssured.given;
 import static kz.yandex.practicum.qa.scooter.FakerInstance.FAKER;
-import static kz.yandex.practicum.qa.scooter.util.JsonUtil.toJson;
 import static kz.yandex.practicum.qa.scooter.util.ScooterRentUrlUtil.*;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
@@ -35,11 +35,9 @@ public class CourierLoginTest {
     public static void setUpBeforeClass() {
         baseURI = BASE_URL;
 
-        String courierJson = toJson(CREDENTIALS);
-
         given()
                 .header("Content-type", "application/json")
-                .body(courierJson)
+                .body(CREDENTIALS)
                 .when()
                 .post(COURIER_PATH)
                 .then()
@@ -57,13 +55,9 @@ public class CourierLoginTest {
     @Description("Ответ должен быть успешным. Ожидаемый статус = 200")
     public void testLoginShouldRespondOk() {
 
-        String credentialsJson = toJson(CREDENTIALS);
-
-        System.out.println(credentialsJson);
-
         Long courierId = given()
                 .header("Content-type", "application/json")
-                .body(credentialsJson)
+                .body(CREDENTIALS)
                 .when()
                 .post(COURIER_LOGIN_PATH)
                 .then()
@@ -84,13 +78,9 @@ public class CourierLoginTest {
     @Description("Ответ должен быть не успешным. Ожидаемый статус = 400, тело ответа = {\"message\":  \"Недостаточно данных для входа\"}")
     public void testLoginWithoutUsernameShouldRespondBadRequest() {
 
-        String credentialsJson = toJson(CREDENTIALS.clone().setLogin(null));
-
-        System.out.println(credentialsJson);
-
         given()
                 .header("Content-type", "application/json")
-                .body(credentialsJson)
+                .body(CREDENTIALS.clone().setLogin(null))
                 .when()
                 .post(COURIER_LOGIN_PATH)
                 .then()
@@ -105,13 +95,9 @@ public class CourierLoginTest {
     @Description("Ответ должен быть не успешным. Ожидаемый статус = 400, тело ответа = {\"message\":  \"Недостаточно данных для входа\"}")
     public void testLoginWithoutPasswordShouldRespondBadRequest() {
 
-        String credentialsJson = toJson(CREDENTIALS.clone().setPassword(null));
-
-        System.out.println(credentialsJson);
-
         given()
                 .header("Content-type", "application/json")
-                .body(credentialsJson)
+                .body(CREDENTIALS.clone().setPassword(null))
                 .when()
                 .post(COURIER_LOGIN_PATH)
                 .then()
@@ -126,13 +112,9 @@ public class CourierLoginTest {
     @Description("Ответ должен быть не успешным. Ожидаемый статус = 400, тело ответа = {\"message\":  \"Недостаточно данных для входа\"}")
     public void testLoginWithoutUsernameAndPasswordShouldRespondBadRequest() {
 
-        String credentialsJson = toJson(new Credentials());
-
-        System.out.println(credentialsJson);
-
         given()
                 .header("Content-type", "application/json")
-                .body(credentialsJson)
+                .body(new Credentials())
                 .when()
                 .post(COURIER_LOGIN_PATH)
                 .then()
@@ -150,13 +132,9 @@ public class CourierLoginTest {
     @Description("Ответ должен быть не успешным. Ожидаемый статус = 404, тело ответа = {\"message\":  \"Учетная запись не найдена\"}")
     public void testLoginWrongUsernameShouldRespondBadRequest() {
 
-        String credentialsJson = toJson(CREDENTIALS.clone().setLogin(FAKER.name().username()));
-
-        System.out.println(credentialsJson);
-
         given()
                 .header("Content-type", "application/json")
-                .body(credentialsJson)
+                .body(CREDENTIALS.clone().setLogin(FAKER.name().username()))
                 .when()
                 .post(COURIER_LOGIN_PATH)
                 .then()
@@ -171,13 +149,9 @@ public class CourierLoginTest {
     @Description("Ответ должен быть не успешным. Ожидаемый статус = 404, тело ответа = {\"message\":  \"Учетная запись не найдена\"}")
     public void testLoginWrongPasswordShouldRespondBadRequest() {
 
-        String credentialsJson = toJson(CREDENTIALS.clone().setPassword(FAKER.internet().password()));
-
-        System.out.println(credentialsJson);
-
         given()
                 .header("Content-type", "application/json")
-                .body(credentialsJson)
+                .body(CREDENTIALS.clone().setPassword(FAKER.internet().password()))
                 .when()
                 .post(COURIER_LOGIN_PATH)
                 .then()
@@ -192,15 +166,11 @@ public class CourierLoginTest {
     @Description("Ответ должен быть не успешным. Ожидаемый статус = 404, тело ответа = {\"message\":  \"Учетная запись не найдена\"}")
     public void testLoginWrongUsernameAndPasswordShouldRespondBadRequest() {
 
-        String credentialsJson = toJson(new Credentials()
-                .setLogin(FAKER.name().username())
-                .setPassword(FAKER.internet().password()));
-
-        System.out.println(credentialsJson);
-
         given()
                 .header("Content-type", "application/json")
-                .body(credentialsJson)
+                .body(new Credentials()
+                        .setLogin(FAKER.name().username())
+                        .setPassword(FAKER.internet().password()))
                 .when()
                 .post(COURIER_LOGIN_PATH)
                 .then()

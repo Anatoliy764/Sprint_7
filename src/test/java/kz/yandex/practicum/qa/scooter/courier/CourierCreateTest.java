@@ -2,9 +2,12 @@ package kz.yandex.practicum.qa.scooter.courier;
 
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
+import io.restassured.response.Response;
 import kz.yandex.practicum.qa.scooter.First;
 import kz.yandex.practicum.qa.scooter.OrderedRunner;
-import kz.yandex.practicum.qa.scooter.util.ScooterRentUrlUtil;
+import kz.yandex.practicum.qa.scooter.courier.api.CourierRestApiClient;
+import kz.yandex.practicum.qa.scooter.courier.dto.Courier;
+import org.apache.http.HttpStatus;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -13,13 +16,8 @@ import org.junit.runner.RunWith;
 import java.util.LinkedList;
 import java.util.List;
 
-import static io.restassured.RestAssured.baseURI;
-import static io.restassured.RestAssured.given;
 import static kz.yandex.practicum.qa.scooter.FakerInstance.FAKER;
-import static kz.yandex.practicum.qa.scooter.util.JsonUtil.toJson;
-import static kz.yandex.practicum.qa.scooter.util.ScooterRentUrlUtil.*;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.notNullValue;
 
 /*
 * 1. Создание курьера
@@ -35,53 +33,58 @@ import static org.hamcrest.Matchers.notNullValue;
 @RunWith(OrderedRunner.class)
 public class CourierCreateTest {
 
-    private static final Courier COURIER_WITH_FIRST_NAME = new Courier()
-            .setLogin(FAKER.name().username())
-            .setPassword(FAKER.internet().password())
-            .setFirstName(FAKER.name().firstName());
-
-    private static final Courier COURIER = new Courier()
-            .setLogin(FAKER.name().username())
-            .setPassword(FAKER.internet().password());
-
     private static final List<Courier> COURIERS = new LinkedList<>();
 
-    static {
-        COURIERS.add(COURIER);
-        COURIERS.add(COURIER_WITH_FIRST_NAME);
-    }
+    private static Courier courierFullyInitialized;
+    private static Courier courierDuplicated;
+    private static Courier courierWithoutPassword;
+    private static Courier courierWithoutUsername;
+    private static Courier courierWithoutUsernameAndPassword;
+    private static Courier courierWithUsernameAndPassword;
+    private static Courier courierWithExistentUsername;
 
     @BeforeClass
     public static void setUpBeforeClass() {
-        baseURI = ScooterRentUrlUtil.BASE_URL;
+        courierFullyInitialized = new Courier()
+                .setLogin(FAKER.name().username())
+                .setPassword(FAKER.internet().password())
+                .setFirstName(FAKER.name().firstName());
+
+        courierDuplicated = courierFullyInitialized.clone();
+
+        courierWithoutPassword = new Courier().setLogin(FAKER.name().username());
+
+        courierWithoutUsername = new Courier().setPassword(FAKER.internet().password());
+
+        courierWithoutUsernameAndPassword = new Courier().setFirstName(FAKER.name().firstName());
+
+        courierWithUsernameAndPassword = new Courier()
+                .setLogin(FAKER.name().username())
+                .setPassword(FAKER.internet().password());
+
+        courierWithExistentUsername = courierWithUsernameAndPassword.clone()
+                .setPassword(FAKER.internet().password());
+
+        COURIERS.add(courierFullyInitialized);
+        COURIERS.add(courierWithoutPassword);
+        COURIERS.add(courierWithoutUsername);
+        COURIERS.add(courierWithoutUsernameAndPassword);
+        COURIERS.add(courierWithUsernameAndPassword);
+        COURIERS.add(courierWithExistentUsername);
     }
 
     @AfterClass
     public static void tearDownAfterClass() {
 
         for (Courier courier : COURIERS) {
+            // Аутентифицируем курьера для получения идентификатора необходимого для удаления.
+            Response response = CourierRestApiClient.authenticate(courier);
 
-            Credentials credentials = (Credentials) courier;
-
-            String credentialsJson = toJson(credentials);
-
-            System.out.println(credentialsJson);
-
-            // login
-            Long courierId = given()
-                    .header("Content-type", "application/json")
-                    .body(credentialsJson)
-                    .when()
-                    .post(COURIER_LOGIN_PATH)
-                    .then()
-                    .assertThat()
-                    .statusCode(200)
-                    .and()
-                    .body("id", notNullValue())
-                    .extract().response().jsonPath().getLong("id");
-
-            // delete
-            given().when().delete(COURIER_PATH + "/" + courierId).then().assertThat().statusCode(200);
+            if(response.getStatusCode() == HttpStatus.SC_OK) {
+                long courierId = response.then().extract().jsonPath().getLong("id");
+                // удаляем курьера если он был создан и успешно аутентифицирован
+                CourierRestApiClient.delete(courierId);
+            }
         }
     }
 
@@ -95,40 +98,30 @@ public class CourierCreateTest {
     @Description("Ответ должен быть успешным. Ожидаемый статус = 201, тело ответа = {\"ok\":true}")
     public void testCreateCourierShouldReturnOk() {
 
-        String courierJson = toJson(COURIER_WITH_FIRST_NAME);
-
-        given()
-                .header("Content-type", "application/json")
-                .body(courierJson)
-                .when()
-                .post(COURIER_PATH)
+        CourierRestApiClient.create(courierFullyInitialized)
                 .then()
                 .assertThat()
                 .statusCode(201)
                 .and()
                 .body("ok", equalTo(true));
+
     }
 
+    
     // * 2. нельзя создать двух одинаковых курьеров;
     @Test
     @DisplayName("Тест создания курьера идентичного ранее созданному")
     @Description("Ответ должен быть не успешным. Ожидаемый статус = 409, тело ответа = {\"ok\":true}")
     public void testCreateSameCourierShouldReturnConflict() {
 
-        String courierJson = toJson(COURIER_WITH_FIRST_NAME);
-
-        given()
-                .header("Content-type", "application/json")
-                .body(courierJson)
-                .when()
-                .post(COURIER_PATH)
+        CourierRestApiClient.create(courierDuplicated)
                 .then()
                 .assertThat()
                 .statusCode(409)
                 .and()
                 .body("code", equalTo(409))
                 .and()
-                .body("message", equalTo("Этот логин уже используется. Попробуйте другой."));
+                .body("message", equalTo(CourierRestApiClient.MESSAGE_USERNAME_ALREADY_EXISTS));
     }
 
     // * 6. если одного из полей нет, запрос возвращает ошибку;
@@ -137,22 +130,14 @@ public class CourierCreateTest {
     @Description("Ответ должен быть не успешным. Ожидаемый статус = 400, тело ответа = {\"code\":400,\"message\":\"Недостаточно данных для создания учетной записи.\"}")
     public void testCreateCourierWithoutPasswordShouldReturnBadRequest() {
 
-        String courierJson = toJson(new Courier()
-                .setLogin(FAKER.name().username())
-                .setFirstName(FAKER.name().firstName()));
-
-        given()
-                .header("Content-type", "application/json")
-                .body(courierJson)
-                .when()
-                .post(COURIER_PATH)
+        CourierRestApiClient.create(courierWithoutPassword)
                 .then()
                 .assertThat()
                 .statusCode(400)
                 .and()
                 .body("code", equalTo(400))
                 .and()
-                .body("message", equalTo("Недостаточно данных для создания учетной записи"));
+                .body("message", equalTo(CourierRestApiClient.MESSAGE_INSUFFICIENT_DATA));
     }
 
     // * 6. если одного из полей нет, запрос возвращает ошибку;
@@ -161,22 +146,14 @@ public class CourierCreateTest {
     @Description("Ответ должен быть не успешным. Ожидаемый статус = 400, тело ответа = {\"code\":400,\"message\":\"Недостаточно данных для создания учетной записи.\"}")
     public void testCreateCourierWithoutLoginShouldReturnBadRequest() {
 
-        String courierJson = toJson(new Courier()
-                .setPassword(FAKER.internet().password())
-                .setFirstName(FAKER.name().firstName()));
-
-        given()
-                .header("Content-type", "application/json")
-                .body(courierJson)
-                .when()
-                .post(COURIER_PATH)
+        CourierRestApiClient.create(courierWithoutUsername)
                 .then()
                 .assertThat()
                 .statusCode(400)
                 .and()
                 .body("code", equalTo(400))
                 .and()
-                .body("message", equalTo("Недостаточно данных для создания учетной записи"));
+                .body("message", equalTo(CourierRestApiClient.MESSAGE_INSUFFICIENT_DATA));
     }
 
     // * 6. если одного из полей нет, запрос возвращает ошибку;
@@ -188,21 +165,14 @@ public class CourierCreateTest {
     @Description("Ответ должен быть не успешным. Ожидаемый статус = 400, тело ответа = {\"code\":400,\"message\":\"Недостаточно данных для создания учетной записи.\"}")
     public void testCreateCourierWithoutLoginAndPasswordShouldReturnBadRequest() {
 
-        String courierJson = toJson(new Courier()
-                .setFirstName(FAKER.name().firstName()));
-
-        given()
-                .header("Content-type", "application/json")
-                .body(courierJson)
-                .when()
-                .post(COURIER_PATH)
+        CourierRestApiClient.create(courierWithoutUsernameAndPassword)
                 .then()
                 .assertThat()
                 .statusCode(400)
                 .and()
                 .body("code", equalTo(400))
                 .and()
-                .body("message", equalTo("Недостаточно данных для создания учетной записи"));
+                .body("message", equalTo(CourierRestApiClient.MESSAGE_INSUFFICIENT_DATA));
     }
 
     // чтобы создать курьера, нужно передать в ручку все обязательные поля;
@@ -211,13 +181,7 @@ public class CourierCreateTest {
     @Description("Ответ должен быть успешным. Ожидаемый статус = 201, тело ответа = {\"ok\":true}")
     public void testCreateCourierWithoutFirstnameShouldReturnOk() {
 
-        String courierJson = toJson(COURIER);
-
-        given()
-                .header("Content-type", "application/json")
-                .body(courierJson)
-                .when()
-                .post(COURIER_PATH)
+        CourierRestApiClient.create(courierWithUsernameAndPassword)
                 .then()
                 .assertThat()
                 .statusCode(201)
@@ -231,22 +195,13 @@ public class CourierCreateTest {
     @Description("Ответ должен быть не успешным. Ожидаемый статус = 400, тело ответа = {\"code\":409,\"message\":\"Этот логин уже используется. Попробуйте другой.\"}")
     public void testCreateCourierWithExistentLoginShouldReturnConflict() {
 
-        String courierJson = toJson(COURIER_WITH_FIRST_NAME.clone()
-                .setPassword(FAKER.internet().password())
-                .setFirstName(FAKER.name().firstName()));
-
-        given()
-                .header("Content-type", "application/json")
-                .body(courierJson)
-                .when()
-                .post(COURIER_PATH)
+        CourierRestApiClient.create(courierWithExistentUsername)
                 .then()
                 .assertThat()
                 .statusCode(409)
                 .and()
                 .body("code", equalTo(409))
                 .and()
-                .body("message", equalTo("Этот логин уже используется. Попробуйте другой."));
+                .body("message", equalTo(CourierRestApiClient.MESSAGE_USERNAME_ALREADY_EXISTS));
     }
-
 }

@@ -1,6 +1,5 @@
 package kz.yandex.practicum.qa.scooter.order;
 
-import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

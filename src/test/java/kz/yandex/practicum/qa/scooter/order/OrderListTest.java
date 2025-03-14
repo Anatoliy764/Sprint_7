@@ -1,11 +1,8 @@
 package kz.yandex.practicum.qa.scooter.order;
 
-import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
-import kz.yandex.practicum.qa.scooter.util.JsonUtil;
 import kz.yandex.practicum.qa.scooter.util.MetroStationUtil;
 import kz.yandex.practicum.qa.scooter.util.ScooterRentUrlUtil;
-import org.hamcrest.Matchers;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -16,7 +13,6 @@ import java.util.List;
 import static io.restassured.RestAssured.baseURI;
 import static io.restassured.RestAssured.given;
 import static kz.yandex.practicum.qa.scooter.FakerInstance.FAKER;
-import static kz.yandex.practicum.qa.scooter.util.JsonUtil.*;
 import static kz.yandex.practicum.qa.scooter.util.ScooterRentUrlUtil.ORDER_PATH;
 import static org.hamcrest.Matchers.*;
 
@@ -41,7 +37,7 @@ public class OrderListTest {
                 .setDeliveryDate(LocalDate.now().plusDays(FAKER.number().numberBetween(1, 7)))
                 .setComment(FAKER.hobbit().quote());
 
-        long orderId = given().header("Content-type", "application/json").body(toJson(ORDER)).post(ORDER_PATH)
+        long orderId = given().header("Content-type", "application/json").body(ORDER).post(ORDER_PATH)
                 .getBody().jsonPath().getLong("track");
 
         System.out.println("Order ID: " + orderId);
