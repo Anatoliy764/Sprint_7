@@ -1,6 +1,11 @@
-package kz.yandex.practicum.qa.scooter.order;
+package kz.yandex.practicum.qa.scooter.domain.order.dto;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.qameta.allure.internal.shadowed.jackson.annotation.JsonFormat;
+import kz.yandex.practicum.qa.scooter.common.Color;
+import kz.yandex.practicum.qa.scooter.jackson.ColorCollectionDeserializer;
+import kz.yandex.practicum.qa.scooter.jackson.ColorNameCollectionSerializer;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -28,6 +33,9 @@ public class Order {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     LocalDate deliveryDate;
     String comment;
+
+    @JsonSerialize(using = ColorNameCollectionSerializer.class)
+    @JsonDeserialize(using = ColorCollectionDeserializer.class)
     List<Color> color = new LinkedList<>();
 
     public Order addColor(Color color) {

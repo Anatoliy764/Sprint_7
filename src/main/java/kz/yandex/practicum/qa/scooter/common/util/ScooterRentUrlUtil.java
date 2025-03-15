@@ -1,4 +1,4 @@
-package kz.yandex.practicum.qa.scooter.util;
+package kz.yandex.practicum.qa.scooter.common.util;
 
 import lombok.experimental.UtilityClass;
 

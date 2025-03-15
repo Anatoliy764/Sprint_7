@@ -1,4 +1,4 @@
-package kz.yandex.practicum.qa.scooter.courier.dto;
+package kz.yandex.practicum.qa.scooter.domain.courier.dto;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

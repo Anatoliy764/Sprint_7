@@ -2,17 +2,21 @@ package kz.yandex.practicum.qa.scooter.courier;
 
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
-import kz.yandex.practicum.qa.scooter.courier.dto.Courier;
-import kz.yandex.practicum.qa.scooter.courier.dto.Credentials;
-import org.apache.http.HttpStatus;
+import io.restassured.response.ValidatableResponse;
+import kz.yandex.practicum.qa.scooter.domain.courier.api.CourierRestApiClient;
+import kz.yandex.practicum.qa.scooter.domain.courier.dto.Courier;
+import kz.yandex.practicum.qa.scooter.domain.courier.dto.Credentials;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
-import static io.restassured.RestAssured.baseURI;
-import static io.restassured.RestAssured.given;
+import java.util.Collection;
+import java.util.List;
+
 import static kz.yandex.practicum.qa.scooter.FakerInstance.FAKER;
-import static kz.yandex.practicum.qa.scooter.util.ScooterRentUrlUtil.*;
+import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
@@ -26,163 +30,79 @@ import static org.hamcrest.Matchers.notNullValue;
  * 5. если авторизоваться под несуществующим пользователем, запрос возвращает ошибку;
  * 6. успешный запрос возвращает id.
  * */
+@RunWith(Parameterized.class)
 public class CourierLoginTest {
 
     private static final Credentials CREDENTIALS = new Courier()
             .setLogin(FAKER.name().username())
             .setPassword(FAKER.internet().password());
 
+    private final Credentials inputCredentials;
+    private final int expectedStatusCode;
+    private final String expectedMessage;
+
+    public CourierLoginTest(Credentials inputCredentials, int expectedStatusCode, String expectedMessage) {
+        this.inputCredentials = inputCredentials;
+        this.expectedStatusCode = expectedStatusCode;
+        this.expectedMessage = expectedMessage;
+    }
+
     @BeforeClass
     public static void setUpBeforeClass() {
-        baseURI = BASE_URL;
-
-        given()
-                .header("Content-type", "application/json")
-                .body(CREDENTIALS)
-                .when()
-                .post(COURIER_PATH)
+        CourierRestApiClient.create((Courier) CREDENTIALS)
                 .then()
                 .assertThat()
-                .statusCode(201)
+                .statusCode(SC_CREATED)
                 .and()
                 .body("ok", equalTo(true));
     }
 
     @AfterClass
     public static void tearDownAfterClass() {
-        given().when().delete(COURIER_PATH + "/" + ((Courier) CREDENTIALS).getId());
+        CourierRestApiClient.delete(((Courier) CREDENTIALS).getId());
     }
 
-    // 1. курьер может авторизоваться;
-    // 6. успешный запрос возвращает id.
+    @Parameterized.Parameters
+    public static Collection<Object[]> testData() {
+        return List.of(new Object[][]{
+                // TestCase 1: Successful login
+                {CREDENTIALS, SC_OK, null},
 
-    @Test
-    @DisplayName("Тест аутентификации курьера должен вернуть ok")
-    @Description("Ответ должен быть успешным. Ожидаемый статус = 200")
-    public void testLoginShouldRespondOk() {
+                // TestCase 2: Missing username
+                {CREDENTIALS.clone().setLogin(null), SC_BAD_REQUEST, CourierRestApiClient.MESSAGE_INSUFFICIENT_DATA_FOR_LOGIN},
 
-        Long courierId = given()
-                .header("Content-type", "application/json")
-                .body(CREDENTIALS)
-                .when()
-                .post(COURIER_LOGIN_PATH)
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .and()
-                .body("id", notNullValue())
-                .extract().response().jsonPath().getLong("id");
+                // TestCase 3: Missing password
+                {CREDENTIALS.clone().setPassword(null), SC_BAD_REQUEST, CourierRestApiClient.MESSAGE_INSUFFICIENT_DATA_FOR_LOGIN},
 
-        ((Courier) CREDENTIALS).setId(courierId);
-    }
+                // TestCase 4: Missing both username and password
+                {new Credentials(), SC_BAD_REQUEST, CourierRestApiClient.MESSAGE_INSUFFICIENT_DATA_FOR_LOGIN},
 
-    // 2. для авторизации нужно передать все обязательные поля;
-    // 4. если какого-то поля нет, запрос возвращает ошибку;
+                // TestCase 5: Incorrect username
+                {CREDENTIALS.clone().setLogin(FAKER.name().username()), SC_NOT_FOUND, CourierRestApiClient.MESSAGE_ACCOUNT_NOT_FOUND},
 
-    @Test
-    @DisplayName("Тест аутентификации курьера без логина должен вернуть bad request")
-    @Description("Ответ должен быть не успешным. Ожидаемый статус = 400, тело ответа = {\"message\":  \"Недостаточно данных для входа\"}")
-    public void testLoginWithoutUsernameShouldRespondBadRequest() {
+                // TestCase 6: Incorrect password
+                {CREDENTIALS.clone().setPassword(FAKER.internet().password()), SC_NOT_FOUND, CourierRestApiClient.MESSAGE_ACCOUNT_NOT_FOUND},
 
-        given()
-                .header("Content-type", "application/json")
-                .body(CREDENTIALS.clone().setLogin(null))
-                .when()
-                .post(COURIER_LOGIN_PATH)
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .and()
-                .body("message", equalTo("Недостаточно данных для входа"));
-    }
-
-    @Test
-    @DisplayName("Тест аутентификации курьера без пароля должен вернуть bad request")
-    @Description("Ответ должен быть не успешным. Ожидаемый статус = 400, тело ответа = {\"message\":  \"Недостаточно данных для входа\"}")
-    public void testLoginWithoutPasswordShouldRespondBadRequest() {
-
-        given()
-                .header("Content-type", "application/json")
-                .body(CREDENTIALS.clone().setPassword(null))
-                .when()
-                .post(COURIER_LOGIN_PATH)
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .and()
-                .body("message", equalTo("Недостаточно данных для входа"));
-    }
-
-    @Test
-    @DisplayName("Тест аутентификации курьера без логина и пароля должен вернуть bad request")
-    @Description("Ответ должен быть не успешным. Ожидаемый статус = 400, тело ответа = {\"message\":  \"Недостаточно данных для входа\"}")
-    public void testLoginWithoutUsernameAndPasswordShouldRespondBadRequest() {
-
-        given()
-                .header("Content-type", "application/json")
-                .body(new Credentials())
-                .when()
-                .post(COURIER_LOGIN_PATH)
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .and()
-                .body("message", equalTo("Недостаточно данных для входа"));
-    }
-
-    // 3. система вернёт ошибку, если неправильно указать логин или пароль;
-    // 5. если авторизоваться под несуществующим пользователем, запрос возвращает ошибку;
-
-    @Test
-    @DisplayName("Тест аутентификации курьера без логина должен вернуть not found")
-    @Description("Ответ должен быть не успешным. Ожидаемый статус = 404, тело ответа = {\"message\":  \"Учетная запись не найдена\"}")
-    public void testLoginWrongUsernameShouldRespondBadRequest() {
-
-        given()
-                .header("Content-type", "application/json")
-                .body(CREDENTIALS.clone().setLogin(FAKER.name().username()))
-                .when()
-                .post(COURIER_LOGIN_PATH)
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_NOT_FOUND)
-                .and()
-                .body("message", equalTo("Учетная запись не найдена"));
-    }
-
-    @Test
-    @DisplayName("Тест аутентификации курьера без пароля должен вернуть not found")
-    @Description("Ответ должен быть не успешным. Ожидаемый статус = 404, тело ответа = {\"message\":  \"Учетная запись не найдена\"}")
-    public void testLoginWrongPasswordShouldRespondBadRequest() {
-
-        given()
-                .header("Content-type", "application/json")
-                .body(CREDENTIALS.clone().setPassword(FAKER.internet().password()))
-                .when()
-                .post(COURIER_LOGIN_PATH)
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_NOT_FOUND)
-                .and()
-                .body("message", equalTo("Учетная запись не найдена"));
-    }
-
-    @Test
-    @DisplayName("Тест аутентификации курьера без логина и пароля должен вернуть not found")
-    @Description("Ответ должен быть не успешным. Ожидаемый статус = 404, тело ответа = {\"message\":  \"Учетная запись не найдена\"}")
-    public void testLoginWrongUsernameAndPasswordShouldRespondBadRequest() {
-
-        given()
-                .header("Content-type", "application/json")
-                .body(new Credentials()
+                // TestCase 7: Both username and password incorrect
+                {new Credentials()
                         .setLogin(FAKER.name().username())
-                        .setPassword(FAKER.internet().password()))
-                .when()
-                .post(COURIER_LOGIN_PATH)
+                        .setPassword(FAKER.internet().password()), SC_NOT_FOUND, CourierRestApiClient.MESSAGE_ACCOUNT_NOT_FOUND},
+        });
+    }
+
+    @Test
+    @DisplayName("Тест аутентификации курьера")
+    @Description("Параметризованный тест с различными комбинациями логина/пароля")
+    public void testCourierLogin() {
+        ValidatableResponse response = CourierRestApiClient.authenticate(inputCredentials)
                 .then()
                 .assertThat()
-                .statusCode(HttpStatus.SC_NOT_FOUND)
-                .and()
-                .body("message", equalTo("Учетная запись не найдена"));
+                .statusCode(expectedStatusCode);
+
+        if (expectedMessage != null) {
+            response.body("message", equalTo(expectedMessage));
+        } else {
+            response.body("id", notNullValue());
+        }
     }
 }

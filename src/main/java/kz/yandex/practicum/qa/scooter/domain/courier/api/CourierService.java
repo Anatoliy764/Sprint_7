@@ -1,10 +1,10 @@
-package kz.yandex.practicum.qa.scooter.courier.api;
+package kz.yandex.practicum.qa.scooter.domain.courier.api;
 
 import io.restassured.response.Response;
-import kz.yandex.practicum.qa.scooter.courier.dto.Courier;
-import kz.yandex.practicum.qa.scooter.courier.exceptions.CourierAuthenticationException;
-import kz.yandex.practicum.qa.scooter.courier.exceptions.CourierCreateException;
-import kz.yandex.practicum.qa.scooter.courier.exceptions.CourierDeleteException;
+import kz.yandex.practicum.qa.scooter.domain.courier.dto.Courier;
+import kz.yandex.practicum.qa.scooter.domain.courier.exceptions.CourierAuthenticationException;
+import kz.yandex.practicum.qa.scooter.domain.courier.exceptions.CourierCreateException;
+import kz.yandex.practicum.qa.scooter.domain.courier.exceptions.CourierDeleteException;
 import org.apache.http.HttpStatus;
 
 import static io.restassured.RestAssured.given;

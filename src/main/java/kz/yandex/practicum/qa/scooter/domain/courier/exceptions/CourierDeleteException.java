@@ -1,4 +1,4 @@
-package kz.yandex.practicum.qa.scooter.courier.exceptions;
+package kz.yandex.practicum.qa.scooter.domain.courier.exceptions;
 
 public class CourierDeleteException extends RuntimeException {
     public CourierDeleteException(String message) {

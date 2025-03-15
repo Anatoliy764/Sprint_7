@@ -1,4 +1,4 @@
-package kz.yandex.practicum.qa.scooter.order;
+package kz.yandex.practicum.qa.scooter.common;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

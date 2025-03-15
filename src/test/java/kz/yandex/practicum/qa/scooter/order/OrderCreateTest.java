@@ -2,24 +2,22 @@ package kz.yandex.practicum.qa.scooter.order;
 
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
-import kz.yandex.practicum.qa.scooter.util.MetroStationUtil;
-import kz.yandex.practicum.qa.scooter.util.ScooterRentUrlUtil;
+import kz.yandex.practicum.qa.scooter.common.Color;
+import kz.yandex.practicum.qa.scooter.domain.metro.api.MetroStationRestApiClient;
+import kz.yandex.practicum.qa.scooter.domain.order.api.OrderRestApiClient;
+import kz.yandex.practicum.qa.scooter.domain.order.dto.Order;
+import org.apache.http.HttpStatus;
 import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import static io.restassured.RestAssured.baseURI;
-import static io.restassured.RestAssured.given;
 import static kz.yandex.practicum.qa.scooter.FakerInstance.FAKER;
-import static kz.yandex.practicum.qa.scooter.util.ScooterRentUrlUtil.*;
 import static org.hamcrest.Matchers.notNullValue;
 
 /*
@@ -39,7 +37,7 @@ public class OrderCreateTest {
             .setFirstName(FAKER.name().firstName())
             .setLastName(FAKER.name().lastName())
             .setAddress(FAKER.address().streetAddress())
-            .setMetroStation(MetroStationUtil.random().getNumber())
+            .setMetroStation(MetroStationRestApiClient.random().getNumber())
             .setPhone(FAKER.phoneNumber().cellPhone().replaceAll("[^0-9]", ""))
             .setRentTime(FAKER.number().numberBetween(1, 7))
             .setDeliveryDate(LocalDate.now().plusDays(FAKER.number().numberBetween(1, 7)))
@@ -47,12 +45,12 @@ public class OrderCreateTest {
 
     @Parameterized.Parameters
     public static Collection<Object[]> getTestParameters() {
-        return Arrays.asList(new Object[][]{
+        return List.of(new Object[][]{
                 {null, true}, // No color
-                {Arrays.asList(Color.BLACK), true},
-                {Arrays.asList(Color.BLACK, Color.GREY), true},
-                {Arrays.asList(Color.GREY), true},
-                {Arrays.asList(Color.GREEN), false} // Не валидный параметр, ожидается ошибка
+                {List.of(Color.BLACK), true},
+                {List.of(Color.BLACK, Color.GREY), true},
+                {List.of(Color.GREY), true},
+                {List.of(Color.GREEN), false} // Не валидный параметр, ожидается ошибка
         });
     }
 
@@ -64,34 +62,27 @@ public class OrderCreateTest {
         this.isSuccessExpected = isSuccessExpected;
     }
 
-    @BeforeClass
-    public static void setUpBeforeClass() {
-        baseURI = ScooterRentUrlUtil.BASE_URL;
-    }
-
     @AfterClass
     public static void tearDownAfterClass() {
         for (Long orderId : CREATED_ORDERS_IDS) {
-            given()
-                    .when()
-                    .put(ORDER_CANCEL_PATH + orderId)
-                    .then().assertThat().statusCode(200);
+            // Ответ не интересует, т.к. мы не тестируем создание, а не отмену.
+            // Наше дело отправить запрос на отмену для удаления заказа после тестов создания.
+            OrderRestApiClient.cancel(orderId);
         }
     }
 
     @Test
     @DisplayName("Тест создания заказа")
-    @Description("Параметризированный тест создания заказа с различными комбинациями значений в поле color")
+    @Description("Параметризованный тест создания заказа с различными комбинациями значений в поле color")
     public void testCreateOrder() {
         if (colors != null) {
             ORDER.setColor(colors);
         }
 
-        int expectedStatusCode = isSuccessExpected ? 201 : 400;
+        int expectedStatusCode = isSuccessExpected ? HttpStatus.SC_CREATED : HttpStatus.SC_BAD_REQUEST;
 
-        long trackNumber = given().header("Content-type", "application/json").body(ORDER)
-                .when().post(ORDER_PATH)
-                .then().assertThat().statusCode(expectedStatusCode)
+        long trackNumber = OrderRestApiClient.create(ORDER)
+                .then().assertThat().statusCode(expectedStatusCode).and()
                 .body("track", isSuccessExpected ? notNullValue() : null)
                 .extract().response().getBody().jsonPath().getLong("track");
 
