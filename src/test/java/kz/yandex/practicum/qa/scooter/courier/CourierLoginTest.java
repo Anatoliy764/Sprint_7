@@ -54,7 +54,7 @@ public class CourierLoginTest {
                 .assertThat()
                 .statusCode(SC_CREATED)
                 .and()
-                .body("ok", equalTo(true));
+                .body(CourierRestApiClient.OK_JSON_PATH, equalTo(true));
     }
 
     @AfterClass
@@ -100,9 +100,9 @@ public class CourierLoginTest {
                 .statusCode(expectedStatusCode);
 
         if (expectedMessage != null) {
-            response.body("message", equalTo(expectedMessage));
+            response.body(CourierRestApiClient.MESSAGE_JSON_PATH, equalTo(expectedMessage));
         } else {
-            response.body("id", notNullValue());
+            response.body(CourierRestApiClient.ID_JSON_PATH, notNullValue());
         }
     }
 }

@@ -45,7 +45,7 @@ public class CourierCreateTest {
                 .assertThat()
                 .statusCode(HttpStatus.SC_CREATED)
                 .and()
-                .body("ok", equalTo(true));
+                .body(CourierRestApiClient.OK_JSON_PATH, equalTo(true));
     }
 
     @AfterClass
@@ -58,7 +58,7 @@ public class CourierCreateTest {
             Response response = CourierRestApiClient.authenticate(courier);
 
             if (response.getStatusCode() == HttpStatus.SC_OK) {
-                long courierId = response.then().extract().jsonPath().getLong("id");
+                long courierId = response.then().extract().jsonPath().getLong(CourierRestApiClient.ID_JSON_PATH);
                 // удаляем курьера если он был создан и успешно аутентифицирован
                 // неявно тестируется удаление в тесте, который по хорошему должен только проверять создание.
                 // было бы лучше сделать тесты зависимыми, либо же сделать их последовательными с общим контекстом,
@@ -90,7 +90,7 @@ public class CourierCreateTest {
                 .assertThat()
                 .statusCode(HttpStatus.SC_CREATED)
                 .and()
-                .body("ok", equalTo(true));
+                .body(CourierRestApiClient.OK_JSON_PATH, equalTo(true));
     }
 
     // * 2. нельзя создать двух одинаковых курьеров;
@@ -104,9 +104,9 @@ public class CourierCreateTest {
                 .assertThat()
                 .statusCode(HttpStatus.SC_CONFLICT)
                 .and()
-                .body("code", equalTo(HttpStatus.SC_CONFLICT))
+                .body(CourierRestApiClient.CODE_JSON_PATH, equalTo(HttpStatus.SC_CONFLICT))
                 .and()
-                .body("message", equalTo(CourierRestApiClient.MESSAGE_USERNAME_ALREADY_EXISTS));
+                .body(CourierRestApiClient.MESSAGE_JSON_PATH, equalTo(CourierRestApiClient.MESSAGE_USERNAME_ALREADY_EXISTS));
     }
 
     // * 6. если одного из полей нет, запрос возвращает ошибку;
@@ -124,9 +124,9 @@ public class CourierCreateTest {
                 .assertThat()
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .and()
-                .body("code", equalTo(HttpStatus.SC_BAD_REQUEST))
+                .body(CourierRestApiClient.CODE_JSON_PATH, equalTo(HttpStatus.SC_BAD_REQUEST))
                 .and()
-                .body("message", equalTo(CourierRestApiClient.MESSAGE_INSUFFICIENT_DATA));
+                .body(CourierRestApiClient.MESSAGE_JSON_PATH, equalTo(CourierRestApiClient.MESSAGE_INSUFFICIENT_DATA));
     }
 
     // * 6. если одного из полей нет, запрос возвращает ошибку;
@@ -144,9 +144,9 @@ public class CourierCreateTest {
                 .assertThat()
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .and()
-                .body("code", equalTo(HttpStatus.SC_BAD_REQUEST))
+                .body(CourierRestApiClient.CODE_JSON_PATH, equalTo(HttpStatus.SC_BAD_REQUEST))
                 .and()
-                .body("message", equalTo(CourierRestApiClient.MESSAGE_INSUFFICIENT_DATA));
+                .body(CourierRestApiClient.MESSAGE_JSON_PATH, equalTo(CourierRestApiClient.MESSAGE_INSUFFICIENT_DATA));
     }
 
     // * 6. если одного из полей нет, запрос возвращает ошибку;
@@ -166,9 +166,9 @@ public class CourierCreateTest {
                 .assertThat()
                 .statusCode(HttpStatus.SC_BAD_REQUEST)
                 .and()
-                .body("code", equalTo(HttpStatus.SC_BAD_REQUEST))
+                .body(CourierRestApiClient.CODE_JSON_PATH, equalTo(HttpStatus.SC_BAD_REQUEST))
                 .and()
-                .body("message", equalTo(CourierRestApiClient.MESSAGE_INSUFFICIENT_DATA));
+                .body(CourierRestApiClient.MESSAGE_JSON_PATH, equalTo(CourierRestApiClient.MESSAGE_INSUFFICIENT_DATA));
     }
 
     // чтобы создать курьера, нужно передать в ручку все обязательные поля;
@@ -188,7 +188,7 @@ public class CourierCreateTest {
                 .assertThat()
                 .statusCode(HttpStatus.SC_CREATED)
                 .and()
-                .body("ok", equalTo(true));
+                .body(CourierRestApiClient.OK_JSON_PATH, equalTo(true));
     }
 
     // если создать пользователя с логином, который уже есть, возвращается ошибка.
@@ -207,8 +207,8 @@ public class CourierCreateTest {
                 .assertThat()
                 .statusCode(HttpStatus.SC_CONFLICT)
                 .and()
-                .body("code", equalTo(HttpStatus.SC_CONFLICT))
+                .body(CourierRestApiClient.CODE_JSON_PATH, equalTo(HttpStatus.SC_CONFLICT))
                 .and()
-                .body("message", equalTo(CourierRestApiClient.MESSAGE_USERNAME_ALREADY_EXISTS));
+                .body(CourierRestApiClient.MESSAGE_JSON_PATH, equalTo(CourierRestApiClient.MESSAGE_USERNAME_ALREADY_EXISTS));
     }
 }

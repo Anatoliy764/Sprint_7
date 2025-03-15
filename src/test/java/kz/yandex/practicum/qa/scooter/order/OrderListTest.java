@@ -4,6 +4,7 @@ import io.qameta.allure.junit4.DisplayName;
 import kz.yandex.practicum.qa.scooter.domain.metro.api.MetroStationRestApiClient;
 import kz.yandex.practicum.qa.scooter.domain.order.api.OrderRestApiClient;
 import kz.yandex.practicum.qa.scooter.domain.order.dto.Order;
+import org.apache.http.HttpStatus;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -35,7 +36,7 @@ public class OrderListTest {
                 .setComment(FAKER.hobbit().quote());
 
         long orderId = OrderRestApiClient.create(ORDER)
-                .getBody().jsonPath().getLong("track");
+                .getBody().jsonPath().getLong(OrderRestApiClient.TRACK_JSON_PATH);
 
         ORDER.setId(orderId);
     }
@@ -45,10 +46,10 @@ public class OrderListTest {
     public void testGetOrdersShouldReturnArray() {
         OrderRestApiClient.get()
                 .then().assertThat()
-                .statusCode(200).and()
-                .body("orders", notNullValue()).and()
-                .body("orders", instanceOf(List.class)).and()
-                .body("orders", hasSize(greaterThan(0)));
+                .statusCode(HttpStatus.SC_OK).and()
+                .body(OrderRestApiClient.ORDERS_JSON_PATH, notNullValue()).and()
+                .body(OrderRestApiClient.ORDERS_JSON_PATH, instanceOf(List.class)).and()
+                .body(OrderRestApiClient.ORDERS_JSON_PATH, hasSize(greaterThan(0)));
     }
 
     @AfterClass

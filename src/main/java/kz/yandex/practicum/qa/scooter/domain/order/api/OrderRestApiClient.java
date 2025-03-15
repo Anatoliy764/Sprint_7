@@ -2,8 +2,6 @@ package kz.yandex.practicum.qa.scooter.domain.order.api;
 
 import io.qameta.allure.Step;
 import io.restassured.RestAssured;
-import io.restassured.filter.log.RequestLoggingFilter;
-import io.restassured.filter.log.ResponseLoggingFilter;
 import io.restassured.response.Response;
 import kz.yandex.practicum.qa.scooter.common.util.ScooterRentUrlUtil;
 import kz.yandex.practicum.qa.scooter.domain.order.dto.Order;
@@ -17,6 +15,9 @@ import static kz.yandex.practicum.qa.scooter.common.util.ScooterRentUrlUtil.ORDE
 
 @UtilityClass
 public class OrderRestApiClient {
+
+    public static final String ORDERS_JSON_PATH = "orders";
+    public static final String TRACK_JSON_PATH = "track";
 
     static {
         RestAssured.baseURI = ScooterRentUrlUtil.BASE_URL;

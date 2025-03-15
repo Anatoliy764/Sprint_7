@@ -83,8 +83,8 @@ public class OrderCreateTest {
 
         long trackNumber = OrderRestApiClient.create(ORDER)
                 .then().assertThat().statusCode(expectedStatusCode).and()
-                .body("track", isSuccessExpected ? notNullValue() : null)
-                .extract().response().getBody().jsonPath().getLong("track");
+                .body(OrderRestApiClient.TRACK_JSON_PATH, isSuccessExpected ? notNullValue() : null)
+                .extract().response().getBody().jsonPath().getLong(OrderRestApiClient.TRACK_JSON_PATH);
 
         if (isSuccessExpected) {
             CREATED_ORDERS_IDS.add(trackNumber);
